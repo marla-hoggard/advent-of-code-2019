@@ -306,3 +306,57 @@ const crossedWires2 = input => {
 
 	return minDist;
 }
+
+/* ------------------ DAY 4 -------------------- */
+
+// Day 4 - Puzzle 1
+const validPasswords = input => {
+	const [lowerBound, upperBound] = input.split('-').map(el => +el);
+	let count = 0;
+
+	for (let i = lowerBound; i <= upperBound; i++) {
+		if (hasDouble(i) && isIncreasing(i)) {
+			count++;
+		}
+	}
+	return count;
+}
+
+const hasDouble = num => {
+	return !!String(num).match(/(\d)\1/);
+};
+
+const isIncreasing = num => {
+	const digits = String(num).split('');
+	for (let i = 0; i < digits.length - 1; i++) {
+		if (digits[i] > digits[i + 1]) {
+			return false;
+		}
+	}
+	return true;
+}
+
+// Day 4 - Puzzle 2
+const validPasswords2 = input => {
+	const [lowerBound, upperBound] = input.split('-').map(el => +el);
+	let count = 0;
+
+	for (let i = lowerBound; i <= upperBound; i++) {
+		if (isIncreasing(i) && hasSoloDouble(i)) {
+			count++;
+		}
+	}
+	return count;
+}
+
+const hasSoloDouble = num => {
+	let digits = [];
+	String(num).split('').forEach(d => {
+		if (digits[digits.length - 1] && digits[digits.length - 1].slice(-1) === d) {
+			digits[digits.length - 1] += d;
+		} else {
+			digits.push(d);
+		}
+	});
+	return !!digits.find(el => el.length === 2);
+};

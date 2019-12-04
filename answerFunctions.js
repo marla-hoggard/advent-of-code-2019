@@ -1,8 +1,9 @@
-const INPUTS = {
-  1: DAY1,
-  2: DAY2,
-  3: DAY3,
-};
+const INPUTS = [
+  null,
+  DAY1,
+  DAY2,
+  DAY3,
+];
 
 const ANSWERS = {
   "1-1": totalFuelRequirement,

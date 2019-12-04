@@ -1,0 +1,10 @@
+#puzzles {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 200px);
+}
+
+.puzzle {
+  border: 1px solid blue;
+  padding: 5px;
+}

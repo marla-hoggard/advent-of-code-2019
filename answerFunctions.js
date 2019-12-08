@@ -4,6 +4,7 @@ const INPUTS = [
   DAY2,
   DAY3,
   DAY4,
+  DAY5,
 ];
 
 // Which function to run to display the answer to a given puzzle
@@ -19,4 +20,6 @@ const ANSWERS = {
   "3-2": crossedWires2,
   "4-1": validPasswords,
   "4-2": validPasswords2,
+  "5-1": input => diagnosticTest(input, 1), // inputValue = 1, from puzzle spec
+  "5-2": input => diagnosticTest(input, 5), // inputValue = 5, from puzzle spec
 };

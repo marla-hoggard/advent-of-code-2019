@@ -360,3 +360,112 @@ const hasSoloDouble = num => {
 	});
 	return !!digits.find(el => el.length === 2);
 };
+
+/* ------------------ DAY 5 -------------------- */
+
+// Day 5, Puzzles 1 & 2
+const diagnosticTest = (puzzleInput, inputValue) => {
+	let program = puzzleInput.split(',').map(el => +el);
+	let outputValue;
+
+	let i = 0;
+	while (i < program.length) {
+		const opCode = parseOpCode(program[i]);
+		let param1, param2, val1, val2, where;
+
+		switch (opCode.code) {
+			case 99:
+				console.log(`Halting. Direction was: ${program[i - 2]}, ${program[i - 1]}`);
+				return outputValue;
+			case 1:
+				[param1, param2, where] = program.slice(i + 1, i + 4);
+				val1 = opCode.paramTypes[0] === '0' ? program[param1] : param1;
+				val2 = opCode.paramTypes[1] === '0' ? program[param2] : param2;
+				program[where] = val1 + val2;
+				i += 4;
+				break;
+			case 2:
+				[param1, param2, where] = program.slice(i + 1, i + 4);
+				val1 = opCode.paramTypes[0] === '0' ? program[param1] : param1;
+				val2 = opCode.paramTypes[1] === '0' ? program[param2] : param2;
+				program[where] = val1 * val2;
+				i += 4;
+				break;
+			case 3:
+				param1 = program[i + 1];
+				program[param1] = inputValue;
+				i += 2;
+				break;
+			case 4:
+				param1 = program[i + 1];
+				val1 = opCode.paramTypes[0] === '0' ? program[param1] : param1;
+				outputValue = val1;
+				console.log('Outputting', val1);
+				i += 2;
+				break;
+			case 5:
+				[param1, param2] = [program[i + 1], program[i + 2]];
+				val1 = opCode.paramTypes[0] === '0' ? program[param1] : param1;
+				val2 = opCode.paramTypes[1] === '0' ? program[param2] : param2;
+				i = val1 !== 0 ? val2 : i + 3;
+				break;
+			case 6:
+				[param1, param2] = [program[i + 1], program[i + 2]];
+				val1 = opCode.paramTypes[0] === '0' ? program[param1] : param1;
+				val2 = opCode.paramTypes[1] === '0' ? program[param2] : param2;
+				i = val1 === 0 ? val2 : i + 3;
+				break;
+			case 7:
+				[param1, param2, where] = program.slice(i + 1, i + 4);
+				val1 = opCode.paramTypes[0] === '0' ? program[param1] : param1;
+				val2 = opCode.paramTypes[1] === '0' ? program[param2] : param2;
+				program[where] = val1 < val2 ? 1 : 0;
+				i += 4;
+				break;
+			case 8:
+				[param1, param2, where] = program.slice(i + 1, i + 4);
+				val1 = opCode.paramTypes[0] === '0' ? program[param1] : param1;
+				val2 = opCode.paramTypes[1] === '0' ? program[param2] : param2;
+				program[where] = val1 === val2 ? 1 : 0;
+				i += 4;
+				break;
+			default:
+				console.log(`Invalid opCode at pos ${i}`, opCode);
+				return;
+		}
+	}
+};
+
+const parseOpCode = opCode => {
+	if (opCode === 99) {
+		return { code: 99 };
+	}
+	const splitCode = String(opCode).split('').reverse();
+	const code = +splitCode[0];
+	let numParams;
+	switch (code) {
+		case 1:
+		case 2:
+		case 7:
+		case 8:
+			numParams = 3;
+			break;
+		case 3:
+		case 4:
+			numParams = 1;
+			break;
+		case 5:
+		case 6:
+			numParams = 2;
+			break;
+		default:
+			console.log('Invalid opCode', code);
+			return;
+	}
+	const paramTypes = splitCode.slice(2).join('').padEnd(numParams, '0').split('');
+
+	return {
+		code,
+		paramTypes,
+	};
+};

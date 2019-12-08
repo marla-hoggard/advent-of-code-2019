@@ -469,3 +469,77 @@ const parseOpCode = opCode => {
 		paramTypes,
 	};
 };
+
+/* ------------------ DAY 6 -------------------- */
+
+// Day 6, Puzzle 1
+// Find the total number of orbits in the input universe
+const totalOrbits = input => {
+	const map = createOrbitMap(input);
+	return map.reduce((tally, cur) => tally + cur.desc.length, 0);
+};
+
+// Creates an orbit map from the puzzle input
+// Form: Array of { name: string, parent: string, children[], desc[] }
+const createOrbitMap = input => {
+	const allPatterns = input.split('\n');
+	let patterns = input.split('\n');
+	let map = [];
+	let queue = ['COM'];
+	while (patterns.length || queue.length) {
+		const name = queue.shift();
+		const parent = getParentName(allPatterns, name);
+		const children = patterns.filter(el => el.startsWith(name)).map(el => el.split(')')[1]);
+		map.push({ name, parent, children, desc: children });
+
+		const ancestors = map.filter(el => el.desc.includes(name));
+		ancestors.forEach(ancestor => ancestor.desc = ancestor.desc.concat(children))
+
+		queue = queue.concat(children);
+
+		patterns = patterns.filter(el => !el.startsWith(name));
+	}
+	return map;
+};
+
+// Returns the name of the parent object, given a list of patters and the name of this object
+const getParentName = (patterns, name) => {
+	const pattern = patterns.find(el => el.endsWith(name));
+	if (!pattern) {
+		return null;
+	}
+	const [parent] = pattern.split(')');
+	return parent;
+}
+
+// Day 6, Puzzle 2
+const fromYouToSanta = input => {
+	const map = createOrbitMap(input);
+	const commonAncestors = map.filter(el => el.desc.includes('YOU') && el.desc.includes('SAN'));
+
+	// Map each common ancestor to the total distance from YOU and SAN to that ancestor
+	// Then subtract 2 since the puzzle wants distance from YOU's parent to SAN's parent
+	// If this is built on in a later puzzle, move the specificity elsewhere
+	const distances = commonAncestors.map(anc => findOrbitDistance(map, anc.name, 'YOU') + findOrbitDistance(map, anc.name, 'SAN') - 2);
+	return Math.min(...distances);
+}
+
+// Finds the distance from @planet to @ancestor in the given @map universe
+// @ancestor, @planet are name strings
+const findOrbitDistance = (map, ancestor, planet) => {
+	let count = 0;
+	let current = planet;
+	while (current !== ancestor) {
+		const curObject = map.find(el => el.name === current);
+		current = map.find(el => el.name === curObject.parent);
+		if (current) {
+			current = current.name;
+		} else {
+			console.log(curObject);
+		}
+		count++;
+	}
+	return count;
+}
+
+

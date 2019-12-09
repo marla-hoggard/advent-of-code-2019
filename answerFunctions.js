@@ -6,6 +6,7 @@ const INPUTS = [
   DAY4,
   DAY5,
   DAY6,
+  DAY7,
 ];
 
 // Which function to run to display the answer to a given puzzle
@@ -25,4 +26,6 @@ const ANSWERS = {
   "5-2": input => diagnosticTest(input, 5), // inputValue = 5, from puzzle spec
   "6-1": totalOrbits,
   "6-2": fromYouToSanta,
+  "7-1": findMaxOutput,
+  "7-2": () => console.log('puzzle 2'),
 };

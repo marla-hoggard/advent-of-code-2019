@@ -363,10 +363,12 @@ const hasSoloDouble = num => {
 
 /* ------------------ DAY 5 -------------------- */
 
-// Day 5, Puzzles 1 & 2
-const diagnosticTest = (puzzleInput, inputValue) => {
+// Day 5 - Puzzles 1 & 2
+// Modified for Day 7
+const diagnosticTest = (puzzleInput, input1, input2 = input1) => {
 	let program = puzzleInput.split(',').map(el => +el);
 	let outputValue;
+	let hasUsedInput = false;
 
 	let i = 0;
 	while (i < program.length) {
@@ -375,7 +377,6 @@ const diagnosticTest = (puzzleInput, inputValue) => {
 
 		switch (opCode.code) {
 			case 99:
-				console.log(`Halting. Direction was: ${program[i - 2]}, ${program[i - 1]}`);
 				return outputValue;
 			case 1:
 				[param1, param2, where] = program.slice(i + 1, i + 4);
@@ -393,14 +394,15 @@ const diagnosticTest = (puzzleInput, inputValue) => {
 				break;
 			case 3:
 				param1 = program[i + 1];
-				program[param1] = inputValue;
+				program[param1] = hasUsedInput ? input2 : input1;
+				hasUsedInput = true;
 				i += 2;
 				break;
 			case 4:
 				param1 = program[i + 1];
 				val1 = opCode.paramTypes[0] === '0' ? program[param1] : param1;
 				outputValue = val1;
-				console.log('Outputting', val1);
+				// console.log('Outputting', val1);
 				i += 2;
 				break;
 			case 5:
@@ -472,7 +474,7 @@ const parseOpCode = opCode => {
 
 /* ------------------ DAY 6 -------------------- */
 
-// Day 6, Puzzle 1
+// Day 6 - Puzzle 1
 // Find the total number of orbits in the input universe
 const totalOrbits = input => {
 	const map = createOrbitMap(input);
@@ -512,7 +514,7 @@ const getParentName = (patterns, name) => {
 	return parent;
 }
 
-// Day 6, Puzzle 2
+// Day 6 - Puzzle 2
 const fromYouToSanta = input => {
 	const map = createOrbitMap(input);
 	const commonAncestors = map.filter(el => el.desc.includes('YOU') && el.desc.includes('SAN'));
@@ -542,4 +544,58 @@ const findOrbitDistance = (map, ancestor, planet) => {
 	return count;
 }
 
+/* ------------------ DAY 7 -------------------- */
+
+// Day 7 - Puzzle 1
+// Runs amplifiers on all possible values of phases
+// Returns the value of the max output
+const findMaxOutput = input => {
+	let maxValue = -Infinity;
+	let bestPhases;
+
+	const permutations = getPermutations("01234");
+	permutations.forEach(perm => {
+		const output = amplifiers(input, perm);
+		if (output > maxValue) {
+			maxValue = output;
+			bestPhases = perm;
+		}
+	});
+
+	console.log(bestPhases);
+	return maxValue;
+}
+
+// Runs the diagnostic test five times,
+// using the five digits of phases as input1
+// and each run's output as input2 of the next test
+// @phases = A five digit string
+const amplifiers = (input, phases) => {
+	let output = 0;
+	phases.split('').map(el => +el).forEach(phase => {
+		output = diagnosticTest(input, phase, output);
+	});
+	return output;
+}
+
+// Takes a string
+// Returns an array of all possible permutations of the characters in string
+// Note: This assumes all chars in str are unique, since they are for Day 7, Puzzle 1
+// To account for duplicates, change the return to `Array.from(new Set(perms))`
+const getPermutations = str => {
+	const allChars = str.split('');
+	let perms = [...allChars];
+
+	while (perms[0].length < str.length) {
+		let nextPerms = [];
+		perms.forEach(perm => {
+			nextPerms = nextPerms.concat(
+				allChars.filter(char => !perm.includes(char))
+					.map(end => perm + end));
+		});
+		perms = [...nextPerms];
+	}
+
+	return perms;
+}
 

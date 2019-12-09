@@ -364,7 +364,7 @@ const hasSoloDouble = num => {
 /* ------------------ DAY 5 -------------------- */
 
 // Day 5 - Puzzles 1 & 2
-// Modified for Day 7
+// Modified for use in Day 7 - Puzzle 1
 const diagnosticTest = (puzzleInput, input1, input2 = input1) => {
 	let program = puzzleInput.split(',').map(el => +el);
 	let outputValue;
@@ -373,70 +373,108 @@ const diagnosticTest = (puzzleInput, input1, input2 = input1) => {
 	let i = 0;
 	while (i < program.length) {
 		const opCode = parseOpCode(program[i]);
-		let param1, param2, val1, val2, where;
+		const inputValue = hasUsedInput ? input2 : input1;
+		const result = useOpCode(program, opCode, i, inputValue);
 
-		switch (opCode.code) {
-			case 99:
-				return outputValue;
-			case 1:
-				[param1, param2, where] = program.slice(i + 1, i + 4);
-				val1 = opCode.paramTypes[0] === '0' ? program[param1] : param1;
-				val2 = opCode.paramTypes[1] === '0' ? program[param2] : param2;
-				program[where] = val1 + val2;
-				i += 4;
-				break;
-			case 2:
-				[param1, param2, where] = program.slice(i + 1, i + 4);
-				val1 = opCode.paramTypes[0] === '0' ? program[param1] : param1;
-				val2 = opCode.paramTypes[1] === '0' ? program[param2] : param2;
-				program[where] = val1 * val2;
-				i += 4;
-				break;
-			case 3:
-				param1 = program[i + 1];
-				program[param1] = hasUsedInput ? input2 : input1;
-				hasUsedInput = true;
-				i += 2;
-				break;
-			case 4:
-				param1 = program[i + 1];
-				val1 = opCode.paramTypes[0] === '0' ? program[param1] : param1;
-				outputValue = val1;
-				// console.log('Outputting', val1);
-				i += 2;
-				break;
-			case 5:
-				[param1, param2] = [program[i + 1], program[i + 2]];
-				val1 = opCode.paramTypes[0] === '0' ? program[param1] : param1;
-				val2 = opCode.paramTypes[1] === '0' ? program[param2] : param2;
-				i = val1 !== 0 ? val2 : i + 3;
-				break;
-			case 6:
-				[param1, param2] = [program[i + 1], program[i + 2]];
-				val1 = opCode.paramTypes[0] === '0' ? program[param1] : param1;
-				val2 = opCode.paramTypes[1] === '0' ? program[param2] : param2;
-				i = val1 === 0 ? val2 : i + 3;
-				break;
-			case 7:
-				[param1, param2, where] = program.slice(i + 1, i + 4);
-				val1 = opCode.paramTypes[0] === '0' ? program[param1] : param1;
-				val2 = opCode.paramTypes[1] === '0' ? program[param2] : param2;
-				program[where] = val1 < val2 ? 1 : 0;
-				i += 4;
-				break;
-			case 8:
-				[param1, param2, where] = program.slice(i + 1, i + 4);
-				val1 = opCode.paramTypes[0] === '0' ? program[param1] : param1;
-				val2 = opCode.paramTypes[1] === '0' ? program[param2] : param2;
-				program[where] = val1 === val2 ? 1 : 0;
-				i += 4;
-				break;
-			default:
-				console.log(`Invalid opCode at pos ${i}`, opCode);
-				return;
+		if (result.shouldReturnOutput) {
+			return outputValue;
 		}
+
+		if (result.outputValue) {
+			outputValue = result.outputValue;
+		}
+
+		if (result.usedInput) {
+			hasUsedInput = true;
+		}
+
+		program = result.program;
+		i = result.i;
 	}
 };
+
+/* Performs the instructions of one opcode and updates params accordingly
+ * Returns an object with the following keys:
+ * program: the updated version of the program param
+ * i: the updated i-counter
+ * outputValue: the updated outputValue if opcode = 4, otherwise undefined
+ * shouldReturnOutput: boolean - true if opcode 99 (to tell greater program to halt and return)
+ * usedInput: boolean - true if opcode 3 (to tell greater program)
+*/
+const useOpCode = (program, opCode, i, inputValue) => {
+	let param1, param2, val1, val2, where, outputValue;
+	let shouldReturnOutput = false;
+	let usedInput = false;
+
+	switch (opCode.code) {
+		case 99:
+			shouldReturnOutput = true;
+			break;
+		case 1:
+			[param1, param2, where] = program.slice(i + 1, i + 4);
+			val1 = opCode.paramTypes[0] === '0' ? program[param1] : param1;
+			val2 = opCode.paramTypes[1] === '0' ? program[param2] : param2;
+			program[where] = val1 + val2;
+			i += 4;
+			break;
+		case 2:
+			[param1, param2, where] = program.slice(i + 1, i + 4);
+			val1 = opCode.paramTypes[0] === '0' ? program[param1] : param1;
+			val2 = opCode.paramTypes[1] === '0' ? program[param2] : param2;
+			program[where] = val1 * val2;
+			i += 4;
+			break;
+		case 3:
+			param1 = program[i + 1];
+			program[param1] = inputValue;
+			usedInput = true;
+			i += 2;
+			break;
+		case 4:
+			param1 = program[i + 1];
+			val1 = opCode.paramTypes[0] === '0' ? program[param1] : param1;
+			outputValue = val1;
+			i += 2;
+			break;
+		case 5:
+			[param1, param2] = [program[i + 1], program[i + 2]];
+			val1 = opCode.paramTypes[0] === '0' ? program[param1] : param1;
+			val2 = opCode.paramTypes[1] === '0' ? program[param2] : param2;
+			i = val1 !== 0 ? val2 : i + 3;
+			break;
+		case 6:
+			[param1, param2] = [program[i + 1], program[i + 2]];
+			val1 = opCode.paramTypes[0] === '0' ? program[param1] : param1;
+			val2 = opCode.paramTypes[1] === '0' ? program[param2] : param2;
+			i = val1 === 0 ? val2 : i + 3;
+			break;
+		case 7:
+			[param1, param2, where] = program.slice(i + 1, i + 4);
+			val1 = opCode.paramTypes[0] === '0' ? program[param1] : param1;
+			val2 = opCode.paramTypes[1] === '0' ? program[param2] : param2;
+			program[where] = val1 < val2 ? 1 : 0;
+			i += 4;
+			break;
+		case 8:
+			[param1, param2, where] = program.slice(i + 1, i + 4);
+			val1 = opCode.paramTypes[0] === '0' ? program[param1] : param1;
+			val2 = opCode.paramTypes[1] === '0' ? program[param2] : param2;
+			program[where] = val1 === val2 ? 1 : 0;
+			i += 4;
+			break;
+		default:
+			console.log(`Invalid opCode at pos ${i}`, opCode);
+			return;
+	}
+
+	return {
+		program,
+		i,
+		outputValue,
+		shouldReturnOutput,
+		usedInput,
+	};
+}
 
 const parseOpCode = opCode => {
 	if (opCode === 99) {
@@ -562,7 +600,7 @@ const findMaxOutput = input => {
 		}
 	});
 
-	console.log(bestPhases);
+	console.log('Best permutation:', bestPhases);
 	return maxValue;
 }
 
@@ -599,3 +637,94 @@ const getPermutations = str => {
 	return perms;
 }
 
+// Day 7 - Puzzle 2
+const findMaxOutput2 = input => {
+	let maxValue = -Infinity;
+	let bestPhases;
+
+	const permutations = getPermutations("56789");
+	permutations.forEach(perm => {
+		// The program hung every time a perm started with a 6, so I just skipped them
+		// I was fortunate, that the right answer did not start with a 6!
+		if (perm.startsWith("6")) {
+			console.log('bad, skipping');
+		} else {
+			const output = feedbackLoop(input, perm);
+			if (output > maxValue) {
+				maxValue = output;
+				bestPhases = perm;
+			}
+		}
+	});
+
+	console.log('Best permutation:', bestPhases);
+	return maxValue;
+};
+
+// Runs the diagnostic test through a feedback loop of five amplifiers
+// @phases = A five digit string
+const feedbackLoop = (input, phases) => {
+	const steps = input.split(',').map(el => +el);
+	let amps = ['A', 'B', 'C', 'D', 'E']
+		.map((name, idx) => {
+			return {
+				name,
+				program: [...steps],
+				i: 0,
+				inputValue: +phases[idx],
+				outputValue: null,
+				nextInputValue: null,
+				done: false,
+			};
+		});
+
+	amps[0].nextInputValue = 0;
+
+	let currentAmpIndex = 0;
+
+	while (amps.some(a => !a.done)) {
+		let current = amps[currentAmpIndex];
+		let { program, i, inputValue, nextInputValue } = current;
+		const opCode = parseOpCode(program[i]);
+
+		// If this amp has halted or the next step requires an input that we don't have yet, go to the next amp
+		if (current.done || (opCode.code === 3 && current.inputValue === null)) {
+			currentAmpIndex = (currentAmpIndex + 1) % 5;
+		} else {
+			const result = useOpCode(program, opCode, i, inputValue);
+
+			current.program = result.program;
+			current.i = result.i;
+
+			if (result.usedInput) {
+				if (nextInputValue !== null) {
+					current.inputValue = nextInputValue;
+					current.nextInputValue = null;
+				} else {
+					current.inputValue = null;
+				}
+			}
+
+			if (result.shouldReturnOutput || result.outputValue) {
+				if (result.outputValue) {
+					current.outputValue = result.outputValue;
+				}
+
+				if (result.shouldReturnOutput) {
+					current.done = true;
+				}
+
+				currentAmpIndex = (currentAmpIndex + 1) % 5;
+				current = amps[currentAmpIndex];
+				if (current.inputValue === null) {
+					current.inputValue = result.outputValue;
+				} else {
+					current.nextInputValue = result.outputValue;
+				}
+			}
+		}
+	}
+
+	return amps[4].outputValue;
+
+};

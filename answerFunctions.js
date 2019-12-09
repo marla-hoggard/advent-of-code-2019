@@ -27,5 +27,5 @@ const ANSWERS = {
   "6-1": totalOrbits,
   "6-2": fromYouToSanta,
   "7-1": findMaxOutput,
-  "7-2": () => console.log('puzzle 2'),
+  "7-2": findMaxOutput2,
 };

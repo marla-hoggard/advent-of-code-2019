@@ -16,3 +16,27 @@ h2 {
   padding: 5px;
   text-align: center;
 }
+
+#day8visualization {
+  border: 1px solid black;
+  width: 250px;
+  margin: auto;
+  margin-top: 10px;
+  text-align: center;
+  display: none;
+}
+
+.day8row {
+  display: flex;
+  height: 10px;
+  width: 250px;
+  margin: auto;
+}
+
+.day8cell {
+  width: 10px;
+}
+
+.black {
+  background-color: black;
+}

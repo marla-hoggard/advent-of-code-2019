@@ -7,6 +7,7 @@ const INPUTS = [
   DAY5,
   DAY6,
   DAY7,
+  DAY8,
 ];
 
 // Which function to run to display the answer to a given puzzle
@@ -28,4 +29,6 @@ const ANSWERS = {
   "6-2": fromYouToSanta,
   "7-1": findMaxOutput,
   "7-2": findMaxOutput2,
+  "8-1": digitalSendingNetwork,
+  "8-2": drawImage,
 };

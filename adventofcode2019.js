@@ -726,5 +726,76 @@ const feedbackLoop = (input, phases) => {
 	}
 
 	return amps[4].outputValue;
-
 };
+
+/* ------------------ DAY 8 -------------------- */
+// Day 8 - Puzzle 1
+// Takes the puzzle input (made up of 0-2) and the width & height of each layer
+// Returns the number of 1s * 2s on the layer with the fewest 0s
+const digitalSendingNetwork = (input, width = 25, height = 6) => {
+	let zeros = [];
+	let ones = [];
+	let twos = [];
+
+	const area = width * height;
+
+	for (let i = 0; i < input.length; i += area) {
+		const layer = input.slice(i, i + area).split('').sort().join('');
+		const index1 = layer.indexOf('1');
+		const index2 = layer.indexOf('2');
+		zeros.push(index1);
+		ones.push(index2 - index1);
+		twos.push(area - index2);
+	}
+
+	const minIndex = zeros.findIndex(el => el === Math.min(...zeros));
+	return ones[minIndex] * twos[minIndex];
+}
+
+// Day 8 - Puzzle 2
+const calculateImage = (input, width = 25, height = 6) => {
+	const area = width * height;
+	let layers = [];
+
+	for (let i = 0; i < input.length; i += area) {
+		layers.push(input.slice(i, i + area));
+	}
+
+	let image = [];
+	let i = 0;
+	for (let row = 0; row < height; row++) {
+		let imageRow = [];
+		for (let col = 0; col < width; col++) {
+			const pixel = layers.find(p => p[i] !== '2');
+			pixel[i] !== null ? imageRow.push(pixel[i]) : imageRow.push(2);
+			i++
+		}
+		image.push(imageRow);
+	}
+	return image;
+}
+
+// Display the visualization for Day 8 - Puzzle 2
+const drawImage = input => {
+	const image = calculateImage(input);
+	const imageDiv = document.getElementById('day8visualization');
+	image.forEach(row => {
+		const rowDiv = document.createElement('div');
+		rowDiv.classList.add('day8row');
+		row.forEach(cell => {
+			const cellDiv = document.createElement('div');
+			cellDiv.classList.add('day8cell');
+			if (cell === '0') {
+				cellDiv.classList.add('black');
+			}
+			rowDiv.appendChild(cellDiv);
+		});
+		imageDiv.appendChild(rowDiv);
+	});
+	imageDiv.style.display = 'block'
+
+	return 'See visualization';
+};
+
+
+

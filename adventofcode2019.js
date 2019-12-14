@@ -365,7 +365,7 @@ const hasSoloDouble = num => {
 
 // Day 5 - Puzzles 1 & 2
 // Modified for use in Day 7 - Puzzle 1
-const diagnosticTest = (puzzleInput, input1, input2 = input1) => {
+const diagnosticTest = (puzzleInput, input1, input2 = input1, relativeBase = 0) => {
 	let program = puzzleInput.split(',').map(el => +el);
 	let outputValue;
 	let hasUsedInput = false;
@@ -374,13 +374,13 @@ const diagnosticTest = (puzzleInput, input1, input2 = input1) => {
 	while (i < program.length) {
 		const opCode = parseOpCode(program[i]);
 		const inputValue = hasUsedInput ? input2 : input1;
-		const result = useOpCode(program, opCode, i, inputValue);
+		const result = useOpCode(program, opCode, i, inputValue, relativeBase);
 
 		if (result.shouldReturnOutput) {
 			return outputValue;
 		}
 
-		if (result.outputValue) {
+		if (result.outputValue !== undefined) {
 			outputValue = result.outputValue;
 		}
 
@@ -390,6 +390,7 @@ const diagnosticTest = (puzzleInput, input1, input2 = input1) => {
 
 		program = result.program;
 		i = result.i;
+		relativeBase = result.relativeBase;
 	}
 };
 
@@ -401,66 +402,80 @@ const diagnosticTest = (puzzleInput, input1, input2 = input1) => {
  * shouldReturnOutput: boolean - true if opcode 99 (to tell greater program to halt and return)
  * usedInput: boolean - true if opcode 3 (to tell greater program)
 */
-const useOpCode = (program, opCode, i, inputValue) => {
-	let param1, param2, val1, val2, where, outputValue;
+const useOpCode = (program, opCode, i, inputValue, relativeBase) => {
 	let shouldReturnOutput = false;
 	let usedInput = false;
+
+	let [param1, param2, where] = program.slice(i + 1, i + 4);
+	let val1, val2, outputValue;
+	// Set values to use
+	if (opCode.paramTypes) {
+		if (opCode.paramTypes[0] === '0') {
+			if (param1 < 0) console.log({ param1, code: opCode.code });
+			val1 = program[param1] || 0;
+		} else if (opCode.paramTypes[0] === '1') {
+			val1 = param1;
+		} else {
+			val1 = program[param1 + relativeBase];
+		}
+
+		if (opCode.paramTypes.length > 1) {
+			if (opCode.paramTypes[1] === '0') {
+				if (param2 < 0) console.log({ param2, code: opCode.code });
+				val2 = program[param2] || 0;
+			} else if (opCode.paramTypes[1] === '1') {
+				val2 = param2;
+			} else {
+				val2 = program[param2 + relativeBase];
+			}
+		}
+
+		if (opCode.paramTypes[2] === '2') {
+			where += relativeBase;
+		}
+	}
 
 	switch (opCode.code) {
 		case 99:
 			shouldReturnOutput = true;
 			break;
 		case 1:
-			[param1, param2, where] = program.slice(i + 1, i + 4);
-			val1 = opCode.paramTypes[0] === '0' ? program[param1] : param1;
-			val2 = opCode.paramTypes[1] === '0' ? program[param2] : param2;
 			program[where] = val1 + val2;
 			i += 4;
 			break;
 		case 2:
-			[param1, param2, where] = program.slice(i + 1, i + 4);
-			val1 = opCode.paramTypes[0] === '0' ? program[param1] : param1;
-			val2 = opCode.paramTypes[1] === '0' ? program[param2] : param2;
 			program[where] = val1 * val2;
 			i += 4;
 			break;
 		case 3:
-			param1 = program[i + 1];
-			program[param1] = inputValue;
+			opCode.paramTypes[0] === '2'
+				? program[param1 + relativeBase] = inputValue
+				: program[param1] = inputValue;
 			usedInput = true;
 			i += 2;
 			break;
 		case 4:
-			param1 = program[i + 1];
-			val1 = opCode.paramTypes[0] === '0' ? program[param1] : param1;
 			outputValue = val1;
 			i += 2;
+			console.log(outputValue);
 			break;
 		case 5:
-			[param1, param2] = [program[i + 1], program[i + 2]];
-			val1 = opCode.paramTypes[0] === '0' ? program[param1] : param1;
-			val2 = opCode.paramTypes[1] === '0' ? program[param2] : param2;
 			i = val1 !== 0 ? val2 : i + 3;
 			break;
 		case 6:
-			[param1, param2] = [program[i + 1], program[i + 2]];
-			val1 = opCode.paramTypes[0] === '0' ? program[param1] : param1;
-			val2 = opCode.paramTypes[1] === '0' ? program[param2] : param2;
 			i = val1 === 0 ? val2 : i + 3;
 			break;
 		case 7:
-			[param1, param2, where] = program.slice(i + 1, i + 4);
-			val1 = opCode.paramTypes[0] === '0' ? program[param1] : param1;
-			val2 = opCode.paramTypes[1] === '0' ? program[param2] : param2;
 			program[where] = val1 < val2 ? 1 : 0;
 			i += 4;
 			break;
 		case 8:
-			[param1, param2, where] = program.slice(i + 1, i + 4);
-			val1 = opCode.paramTypes[0] === '0' ? program[param1] : param1;
-			val2 = opCode.paramTypes[1] === '0' ? program[param2] : param2;
 			program[where] = val1 === val2 ? 1 : 0;
 			i += 4;
+			break;
+		case 9:
+			relativeBase += val1;
+			i += 2;
 			break;
 		default:
 			console.log(`Invalid opCode at pos ${i}`, opCode);
@@ -473,6 +488,7 @@ const useOpCode = (program, opCode, i, inputValue) => {
 		outputValue,
 		shouldReturnOutput,
 		usedInput,
+		relativeBase,
 	};
 }
 
@@ -484,19 +500,20 @@ const parseOpCode = opCode => {
 	const code = +splitCode[0];
 	let numParams;
 	switch (code) {
-		case 1:
-		case 2:
-		case 7:
-		case 8:
-			numParams = 3;
-			break;
 		case 3:
 		case 4:
+		case 9:
 			numParams = 1;
 			break;
 		case 5:
 		case 6:
 			numParams = 2;
+			break;
+		case 1:
+		case 2:
+		case 7:
+		case 8:
+			numParams = 3;
 			break;
 		default:
 			console.log('Invalid opCode', code);
@@ -675,6 +692,7 @@ const feedbackLoop = (input, phases) => {
 				outputValue: null,
 				nextInputValue: null,
 				done: false,
+				relativeBase: 0,
 			};
 		});
 
@@ -684,17 +702,18 @@ const feedbackLoop = (input, phases) => {
 
 	while (amps.some(a => !a.done)) {
 		let current = amps[currentAmpIndex];
-		let { program, i, inputValue, nextInputValue } = current;
+		let { program, i, inputValue, nextInputValue, relativeBase } = current;
 		const opCode = parseOpCode(program[i]);
 
 		// If this amp has halted or the next step requires an input that we don't have yet, go to the next amp
 		if (current.done || (opCode.code === 3 && current.inputValue === null)) {
 			currentAmpIndex = (currentAmpIndex + 1) % 5;
 		} else {
-			const result = useOpCode(program, opCode, i, inputValue);
+			const result = useOpCode(program, opCode, i, inputValue, relativeBase);
 
 			current.program = result.program;
 			current.i = result.i;
+			current.relativeBase = result.relativeBase;
 
 			if (result.usedInput) {
 				if (nextInputValue !== null) {
@@ -768,7 +787,7 @@ const calculateImage = (input, width = 25, height = 6) => {
 		for (let col = 0; col < width; col++) {
 			const pixel = layers.find(p => p[i] !== '2');
 			pixel[i] !== null ? imageRow.push(pixel[i]) : imageRow.push(2);
-			i++
+			i++;
 		}
 		image.push(imageRow);
 	}

@@ -8,6 +8,7 @@ const INPUTS = [
   DAY6,
   DAY7,
   DAY8,
+  DAY9,
 ];
 
 // Which function to run to display the answer to a given puzzle
@@ -31,4 +32,6 @@ const ANSWERS = {
   "7-2": findMaxOutput2,
   "8-1": digitalSendingNetwork,
   "8-2": drawImage,
+  "9-1": input => diagnosticTest(input, 1), // inputValue = 1, from puzzle spec
+  "9-2": input => diagnosticTest(input, 2), // inputValue = 2, from puzzle spec
 };

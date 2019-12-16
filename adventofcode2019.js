@@ -816,5 +816,169 @@ const drawImage = input => {
 	return 'See visualization';
 };
 
+/* ------------------ DAY 9 -------------------- */
+// Day 9 required updating the existing Int Code Computer functions from Day 5
+// and did not need any additional functions
+
+/* ------------------ DAY 10 -------------------- */
+
+// Day 10 - Puzzle 1
+const bestAsteroid = input => {
+	let asteroids = [];
+	input.split('\n').forEach((row, whichRow) => {
+		row.split('').forEach((el, whichCol) => {
+			if (el === '#') {
+				asteroids.push(`${whichCol},${whichRow}`);
+			}
+		});
+	});
+
+	const whoCanISee = visibleAsteroids(asteroids);
+	return Math.max(...Object.values(whoCanISee).map(arr => arr.length));
+}
+
+const visibleAsteroids = (asteroids) => {
+	let whoCanISee = {};
+	asteroids.forEach(coord => whoCanISee[coord] = []);
+	// For each pair of points, find the slope of their line
+	// Check all integer points on the line that connects them
+	// If no integer points are asteroids, add opposing coords to from and to keys of whoCanISee
+	for (let fromIdx = 0; fromIdx < asteroids.length; fromIdx++) {
+		for (let toIdx = fromIdx + 1; toIdx < asteroids.length; toIdx++) {
+			const from = asteroids[fromIdx];
+			const to = asteroids[toIdx];
+			const [fromX, fromY] = from.split(',').map(el => +el);
+			const [toX, toY] = to.split(',').map(el => +el);
+			let [slopeY, slopeX] = calcSlope(from, to);
+
+			// For negative slope, make sure it's always the slopeX coord that's negative
+			if (slopeY < 0) {
+				slopeY *= -1;
+				slopeX *= -1;
+			}
+
+			let x = fromX + slopeX;
+			let y = fromY + slopeY;
+			let blocked = false;
+			while (
+				!blocked &&
+				([x, y].join(',') !== to) &&
+				((slopeY >= 0 && y <= toY) || (slopeY < 0 && y >= toY)) &&
+				((slopeX >= 0 && x <= toX) || (slopeX < 0 && x >= toX))
+			) {
+				if (asteroids.includes([x, y].join(','))) {
+					blocked = true;
+				} else {
+					x += slopeX;
+					y += slopeY;
+				}
+			}
+			if (!blocked) {
+				whoCanISee[from].push(to);
+				whoCanISee[to].push(from);
+			}
+		}
+	}
+	return whoCanISee;
+}
 
 
+// Takes two points, each in the form "x,y"
+// Returns an array of the form [dy, dx]
+// where dy = a.y - b.y and dx = a.x - b.x
+// representing the reduced fraction of the slope
+const calcSlope = (a, b) => {
+	const [ax, ay] = a.split(',').map(el => +el);
+	const [bx, by] = b.split(',').map(el => +el);
+	const num = ay - by;
+	const denom = ax - bx;
+	return reduceFraction(num, denom);
+}
+
+// Returns the actual slope
+const divideSlope = (a, b) => {
+	const [ax, ay] = a.split(',').map(el => +el);
+	const [bx, by] = b.split(',').map(el => +el);
+	const num = ay - by;
+	const denom = ax - bx;
+	return num / denom;
+}
+
+// Day 10 - Puzzle 2
+const destroyAsteroids = (input, nth = 200) => {
+	let asteroids = [];
+	input.split('\n').forEach((row, whichRow) => {
+		row.split('').forEach((el, whichCol) => {
+			if (el === '#') {
+				asteroids.push(`${whichCol},${whichRow}`);
+			}
+		});
+	});
+
+	const whoCanISee = visibleAsteroids(asteroids);
+	const [laser, toHit] = Object.entries(whoCanISee).find(el => el[1].length === Math.max(...Object.values(whoCanISee).map(arr => arr.length)));
+
+	// The designated asteroid will be hit in this rotation
+	// Sort by hit order then return the nth (n-1 since 1-indexed)
+	if (toHit.length >= nth) {
+		const hitOrder = toHit.sort((a, b) => {
+			const quadA = whichQuadrant(laser, a);
+			const quadB = whichQuadrant(laser, b);
+			if (quadA < quadB) {
+				return -1;
+			} else if (quadA > quadB) {
+				return 1;
+			}
+			const slopeA = divideSlope(laser, a);
+			const slopeB = divideSlope(laser, b);
+			// Highest |slope| first
+			if (quadA === 2 || quadA === 6) {
+				return Math.abs(slopeB) - Math.abs(slopeA);
+			} else { // Lowest |slope| first
+				return Math.abs(slopeA) - Math.abs(slopeB);
+			}
+		});
+		return hitOrder[nth - 1];
+	}
+	// Since our puzzle input doesn't require more than one round, we're not going to code the else
+	else {
+		console.log('Need more than one round');
+		return {
+			laser,
+			toHit,
+		}
+	}
+}
+
+// Returns which quadrant the point is relative to the center
+// @center & @point are strings "x,y"
+// Quadrants 1-8, starting vertical and moving clockwise
+// 1,3,5,7 are like x- and y-axes (if center were 0,0)
+// 2,4,6,8 are the four quadrants, TR, BR, BL, TL
+const whichQuadrant = (center, point) => {
+	const [centerX, centerY] = center.split(',').map(el => +el);
+	const [pointX, pointY] = point.split(',').map(el => +el);
+
+	const dx = pointX - centerX;
+	const dy = pointY - centerY;
+
+	if (dx === 0 && dy < 0) {
+		return 1;
+	} else if (dx > 0 && dy < 0) {
+		return 2;
+	} else if (dx > 0 && dy === 0) {
+		return 3;
+	} else if (dx > 0 && dy > 0) {
+		return 4;
+	} else if (dx === 0 && dy > 0) {
+		return 5;
+	} else if (dx < 0 && dy > 0) {
+		return 6;
+	} else if (dx < 0 && dy === 0) {
+		return 7;
+	} else if (dx < 0 && dy < 0) {
+		return 8;
+	}
+	console.log('Invalid quadrant');
+	return 9;
+}

@@ -52,8 +52,8 @@ const ANSWERS = {
   "9-2": input => diagnosticTest(input, 2), // inputValue = 2, from puzzle spec
   "10-1": bestAsteroid,
   "10-2": destroyAsteroids,
-  "11-1": () => console.log("Day 11 - Puzzle 1"),
-  "11-2": () => console.log("Day 11 - Puzzle 2"),
+  "11-1": howManyPainted,
+  "11-2": doThePainting,
   "12-1": () => console.log("Day 12 - Puzzle 1"),
   "12-2": () => console.log("Day 12 - Puzzle 2"),
   "13-1": () => console.log("Day 13 - Puzzle 1"),

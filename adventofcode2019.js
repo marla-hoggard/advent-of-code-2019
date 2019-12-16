@@ -457,7 +457,7 @@ const useOpCode = (program, opCode, i, inputValue, relativeBase) => {
 		case 4:
 			outputValue = val1;
 			i += 2;
-			console.log(outputValue);
+			// console.log(outputValue);
 			break;
 		case 5:
 			i = val1 !== 0 ? val2 : i + 3;
@@ -798,6 +798,7 @@ const calculateImage = (input, width = 25, height = 6) => {
 const drawImage = input => {
 	const image = calculateImage(input);
 	const imageDiv = document.getElementById('day8visualization');
+	imageDiv.innerHTML = '';
 	image.forEach(row => {
 		const rowDiv = document.createElement('div');
 		rowDiv.classList.add('day8row');
@@ -811,7 +812,7 @@ const drawImage = input => {
 		});
 		imageDiv.appendChild(rowDiv);
 	});
-	imageDiv.style.display = 'block'
+	document.getElementById('day8').style.display = 'block'
 
 	return 'See visualization';
 };
@@ -982,3 +983,107 @@ const whichQuadrant = (center, point) => {
 	console.log('Invalid quadrant');
 	return 9;
 }
+
+/* ------------------ DAY 11 -------------------- */
+const paintRobot = (input, startColor) => {
+	let panel = Array(150).fill(null).map(_ => Array(150).fill(null).map(__ => startColor));
+	let x = 75;
+	let y = 75;
+	let dir = 0;
+	let painted = [];
+	let program = input.split(',').map(el => +el);
+	let i = 0;
+	let inputValue = startColor;
+	let relativeBase = 0;
+	let paintNext = true;
+
+	while (i < program.length) {
+		const opCode = parseOpCode(program[i]);
+		inputValue = panel[y][x];
+		const result = useOpCode(program, opCode, i, inputValue, relativeBase);
+		program = result.program;
+		i = result.i;
+		relativeBase = result.relativeBase;
+
+		if (result.shouldReturnOutput) {
+			break;
+		}
+
+		if (result.usedInput) {
+			inputValue = null;
+		}
+
+		if (result.outputValue !== undefined) {
+			if (paintNext) {
+				panel[y][x] = result.outputValue;
+				painted.push(`${x},${y}`);
+			} else {
+				[x, y, dir] = moveRobot(x, y, dir, result.outputValue);
+			}
+			paintNext = !paintNext;
+		}
+	}
+
+	return {
+		painted: Array.from(new Set(painted)),
+		panel,
+	};
+}
+
+
+// Takes a coordinate (@x,@y), an initial direction and a rotation directoin
+// @x, @y: int, starting coordinate
+// @dir: int, 0-3 representing NESW
+// @rotate: 0 for CCW, 1 for CW
+// Returns updated [x, y, dir] after rotating and moving one space
+const moveRobot = (x, y, dir, rotate) => {
+	const newDir = rotate ? (dir + 1) % 4 : (dir + 3) % 4;
+	switch (newDir) {
+		case 0: // Move up one
+			return [x, y - 1, newDir];
+		case 1: // Move right one
+			return [x + 1, y, newDir];
+		case 2: // Move down one
+			return [x, y + 1, newDir];
+		case 3: // Move left one
+			return [x - 1, y, newDir];
+		default:
+			throw new Error('Bad "newDir" in moveRobot');
+	}
+};
+
+const howManyPainted = (input, startColor = 0) => {
+	return paintRobot(input, startColor).painted.length;
+}
+
+// Display the visualization for Day 11 - Puzzle 2
+const doThePainting = (input, startColor = 1) => {
+	let image = paintRobot(input, startColor).panel;
+
+	// Trim panel to just the image
+	const firstRealRow = image.findIndex(row => row.includes(0));
+	const firstAfterImage = image.slice(firstRealRow).findIndex(row => !row.includes(0));
+	image = image.slice(firstRealRow, firstRealRow + firstAfterImage);
+	const firstRealCol = Math.min(...image.map(row => row.indexOf(0)));
+	const lastRealCol = Math.max(...image.map(row => row.lastIndexOf(0)));
+	image = image.map(row => row.slice(firstRealCol, lastRealCol + 1));
+
+	const imageDiv = document.getElementById('day11visualization');
+	imageDiv.innerHTML = '';
+	image.forEach(row => {
+		const rowDiv = document.createElement('div');
+		rowDiv.classList.add('day11row');
+		row.forEach(cell => {
+			const cellDiv = document.createElement('div');
+			cellDiv.classList.add('day11cell');
+			if (cell === 0) {
+				cellDiv.classList.add('black');
+			}
+			rowDiv.appendChild(cellDiv);
+		});
+		imageDiv.appendChild(rowDiv);
+	});
+	document.getElementById('day11').style.display = 'block';
+
+	return 'See visualization';
+};

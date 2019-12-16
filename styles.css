@@ -17,13 +17,22 @@ h2 {
   text-align: center;
 }
 
+#day8,
+#day11 {
+  display: none;
+  text-align: center;
+  margin: 10px;
+}
+
+.dayTitle {
+  font-weight: bold;
+}
+
 #day8visualization {
   border: 1px solid black;
   width: 250px;
   margin: auto;
   margin-top: 10px;
-  text-align: center;
-  display: none;
 }
 
 .day8row {
@@ -34,6 +43,24 @@ h2 {
 }
 
 .day8cell {
+  width: 10px;
+}
+
+#day11visualization {
+  border: 1px solid black;
+  width: 430px; /* Calculated from puzzle input */
+  margin: auto;
+  margin-top: 10px;
+}
+
+.day11row {
+  display: flex;
+  height: 10px;
+  width: 430px; /* Calculated from puzzle input */
+  margin: auto;
+}
+
+.day11cell {
   width: 10px;
 }
 

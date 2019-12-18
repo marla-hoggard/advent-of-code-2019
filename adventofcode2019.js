@@ -1087,3 +1087,68 @@ const doThePainting = (input, startColor = 1) => {
 
 	return 'See visualization';
 };
+
+/* ------------------ DAY 12 -------------------- */
+// Day 12 - Puzzle 1
+// Calculates the total moon energy of the @input map after @steps steps
+const totalMoonEnergy = (input, steps = 1000) => {
+	let moons = parseMoonInput(input);
+
+	for (let step = 0; step < steps; step++) {
+		moons = moveMoons(moons);
+	}
+
+	return moons.map(moon => {
+		return moon.pos.reduce((tally, cur) => tally + Math.abs(cur), 0) *
+			moon.vel.reduce((tally, cur) => tally + Math.abs(cur), 0);
+	}).reduce((tally, cur) => tally + Math.abs(cur), 0);
+}
+
+const moveMoons = moons => {
+	// Apply gravity to update velocity
+	for (let p = 0; p < 3; p++) {
+		moons.map(moon => moon.pos[p])
+			.forEach((thisPos, whichMoon, positions) => {
+				let delta = 0;
+				delta += positions.filter(psn => psn > thisPos).length;
+				delta -= positions.filter(psn => psn < thisPos).length;
+				moons[whichMoon].vel[p] += delta;
+			});
+	}
+
+	// Apply velocity to update position
+	moons = moons.map(moon => {
+		moon.pos = moon.pos.map((p, i) => p + moon.vel[i]);
+		return moon;
+	});
+
+	return moons;
+}
+
+// Converts the input to an array of objects { pos: [x, y, z], vel: [0, 0, 0]}
+const parseMoonInput = input => {
+	return input.split('\n').map(text => {
+		const [x, y, z] = text.match(/-?\d+/g).map(el => +el);
+		return {
+			pos: [x, y, z],
+			vel: [0, 0, 0],
+		};
+	});
+}
+
+const repeatMoon = input => {
+	let moons = parseMoonInput(input);
+	let moonLayouts = [];
+	let steps = 0;
+	let currentLayout = moons.map(moon => `${moon.pos.join(',')},${moon.vel.join(',')}`).join(',');
+
+	while (!moonLayouts.includes(currentLayout)) {
+		if (steps % 10000 === 0) console.log(steps);
+		moonLayouts.push(currentLayout);
+		moons = moveMoons(moons);
+		currentLayout = moons.map(moon => `${moon.pos.join(',')},${moon.vel.join(',')}`).join(',');
+		steps++;
+	}
+
+	return steps;
+}

@@ -1104,6 +1104,7 @@ const totalMoonEnergy = (input, steps = 1000) => {
 	}).reduce((tally, cur) => tally + Math.abs(cur), 0);
 }
 
+// Moves the moons one step
 const moveMoons = moons => {
 	// Apply gravity to update velocity
 	for (let p = 0; p < 3; p++) {
@@ -1136,19 +1137,45 @@ const parseMoonInput = input => {
 	});
 }
 
+// Day 12 - Puzzle 2
+// Returns how many steps it takes before returning to initial state
 const repeatMoon = input => {
 	let moons = parseMoonInput(input);
-	let moonLayouts = [];
-	let steps = 0;
-	let currentLayout = moons.map(moon => `${moon.pos.join(',')},${moon.vel.join(',')}`).join(',');
+	let iterations = [];
 
-	while (!moonLayouts.includes(currentLayout)) {
-		if (steps % 10000 === 0) console.log(steps);
-		moonLayouts.push(currentLayout);
-		moons = moveMoons(moons);
-		currentLayout = moons.map(moon => `${moon.pos.join(',')},${moon.vel.join(',')}`).join(',');
-		steps++;
+	// Check x, y and z one at a time
+	for (let i = 0; i < 3; i++) {
+		let singleAxisMoons = moons.map(m => {
+			return {
+				pos: m.pos[i],
+				vel: m.vel[i],
+			}
+		});
+
+		const startLayout = `${singleAxisMoons.map(m => m.pos).join(',')}|${singleAxisMoons.map(m => m.vel).join(',')}`;
+		let currentLayout;
+		let steps = 0;
+
+		while (currentLayout != startLayout) {
+			// Apply gravity to update velocity
+			singleAxisMoons.map(moon => moon.pos)
+				.forEach((thisPos, whichMoon, positions) => {
+					let delta = 0;
+					delta += positions.filter(psn => psn > thisPos).length;
+					delta -= positions.filter(psn => psn < thisPos).length;
+					singleAxisMoons[whichMoon].vel += delta;
+				});
+
+			// Apply velocity to update position
+			singleAxisMoons = singleAxisMoons.map(moon => {
+				moon.pos += moon.vel;
+				return moon;
+			});
+
+			currentLayout = `${singleAxisMoons.map(m => m.pos).join(',')}|${singleAxisMoons.map(m => m.vel).join(',')}`
+			steps++;
+		}
+		iterations.push(steps);
 	}
-
-	return steps;
+	return lcm3(...iterations);
 }

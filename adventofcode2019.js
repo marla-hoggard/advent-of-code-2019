@@ -448,6 +448,7 @@ const useOpCode = (program, opCode, i, inputValue, relativeBase) => {
 			i += 4;
 			break;
 		case 3:
+			console.log('using input');
 			opCode.paramTypes[0] === '2'
 				? program[param1 + relativeBase] = inputValue
 				: program[param1] = inputValue;
@@ -1178,4 +1179,148 @@ const repeatMoon = input => {
 		iterations.push(steps);
 	}
 	return lcm3(...iterations);
+}
+
+/* ------------------ DAY 13 -------------------- */
+// Day 13 - Puzzle 1
+const carePackage = puzzleInput => {
+	let program = puzzleInput.split(',').map(el => +el);
+	let inputValue = 0;
+	let relativeBase = 0;
+	let outputValues = [];
+
+	let i = 0;
+	while (i < program.length) {
+		const opCode = parseOpCode(program[i]);
+		const result = useOpCode(program, opCode, i, inputValue, relativeBase);
+
+		if (result.shouldReturnOutput) {
+			console.log(outputValues);
+			break;
+		}
+
+		if (result.outputValue !== undefined) {
+			outputValues.push(result.outputValue);
+		}
+
+		program = result.program;
+		i = result.i;
+		relativeBase = result.relativeBase;
+	}
+
+	return outputValues.filter((el, i) => i % 3 === 2)
+		.filter(el => el === 2)
+		.length;
+}
+
+// Day 13 - Puzzle 2
+const brickBreaker = puzzleInput => {
+	let program = puzzleInput.split(',').map(el => +el);
+	program[0] = 2;
+	let inputValue = 0;
+	let relativeBase = 0;
+	let outputValues = [];
+
+	let i = 0;
+	while (i < program.length) {
+		const opCode = parseOpCode(program[i]);
+		if (opCode.code === 3) {
+			return drawGame(outputValues);
+		}
+		const result = useOpCode(program, opCode, i, inputValue, relativeBase);
+
+		if (result.shouldReturnOutput) {
+			console.log(outputValues);
+			break;
+		}
+
+		if (result.outputValue !== undefined) {
+			outputValues.push(result.outputValue);
+		}
+
+		program = result.program;
+		i = result.i;
+		relativeBase = result.relativeBase;
+	}
+
+	return outputValues.filter((el, i) => i % 3 === 2)
+		.filter(el => el === 2)
+		.length;
+}
+
+const drawGame = output => {
+	let gameBoard = [];
+	for (let i = 0; i < output.length; i += 3) {
+		const [x, y, tile] = output.slice(i, i + 3);
+		if (!gameBoard[y]) {
+			gameBoard[y] = [];
+		}
+		if (gameBoard[y][x] !== undefined) {
+			console.log(`(${x}, ${y}) was ${gameBoard[y][x]}. Now it's ${tile}`);
+		}
+		gameBoard[y][x] = tile;
+	}
+	return gameBoard;
+}
+
+/* ----------- Need to Complete Day 13 Part 2 ------- */
+
+/* ------------------ DAY 14 -------------------- */
+// Day 14 - Puzzle 1
+const makeFuel = input => {
+	const reactions = parseElementInput(input);
+	let combos = [...reactions.FUEL.how];
+	while (combos.some(elem => elem.el !== 'ORE' && elem.amt > 0)) {
+		const next = combos.shift();
+		if (next.el === 'ORE' || next.amt < 0) {
+			combos.push(next);
+			continue;
+		}
+		const howToMakeNext = reactions[next.el];
+		const multiple = Math.ceil(next.amt / howToMakeNext.amt);
+		const toAdd = howToMakeNext.how.map(item => {
+			return {
+				el: item.el,
+				amt: multiple * item.amt,
+			};
+		});
+		if (multiple * howToMakeNext.amt > next.amt) {
+			toAdd.push({
+				el: next.el,
+				amt: next.amt - (multiple * howToMakeNext.amt),
+			});
+		}
+
+		toAdd.forEach(elem => {
+			const whereInCombos = combos.findIndex(item => item.el === elem.el);
+			if (whereInCombos > -1) {
+				combos[whereInCombos].amt += elem.amt;
+				if (combos[whereInCombos].amt === 0) {
+					combos = combos.slice(0, whereInCombos).concat(combos.slice(whereInCombos + 1));
+				}
+			} else {
+				combos.push(elem);
+			}
+		});
+	}
+
+	console.log(combos);
+
+	return combos.filter(elem => elem.el === 'ORE')
+		.reduce((tally, cur) => tally + cur.amt, 0);
+}
+
+
+const parseElementInput = input => {
+	let reactions = {};
+	input.split('\n').forEach(rxn => {
+		const [ingredients, output] = rxn.split(' => ');
+		const how = ingredients.split(', ').map(item => {
+			const [amt, el] = item.split(' ').map(x => isNaN(x) ? x : +x);
+			return { el, amt };
+		});
+		const [amt, keyEl] = output.split(' ').map(x => isNaN(x) ? x : +x);
+		reactions[keyEl] = { amt, how };
+	});
+	return reactions;
 }
